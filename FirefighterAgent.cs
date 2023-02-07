@@ -40,7 +40,7 @@ public class FirefighterAgent : Agent
     private float smoothYawChange = 0f;
 
     //Maximum distance from the gun's tip to accept collision with fire
-    private const float GunTipRadius = 0.2f;
+    private const float GunTipRadius = 0.35f;
 
     //Whether the agent is frozen(intentionally not moving)
     private bool frozen = false;
@@ -251,8 +251,8 @@ public class FirefighterAgent : Agent
                 //Pick a random fire
                 Fire randomFire = fireArea.Fires[UnityEngine.Random.Range(0, fireArea.Fires.Count)];
 
-                // Position 1 to 1.5 m in front of the fire
-                float distanceFromFire = UnityEngine.Random.Range(1f, 1.5f);
+                // Position 0.8 to 1.3 m in front of the fire
+                float distanceFromFire = UnityEngine.Random.Range(0.8f, 1.3f);
                 potentialPosition = randomFire.transform.position + randomFire.FireUpVector * distanceFromFire;
 
                 // Point gun at the fire (agent's head is center of transform, prepei na allaxtei)
@@ -278,7 +278,7 @@ public class FirefighterAgent : Agent
                 potentialRotation = Quaternion.Euler(0f, yaw, 0f);
             }
             //Check to see if the agent will collide with anything
-            Collider[] colliders = Physics.OverlapSphere(potentialPosition, 0.7f);
+            Collider[] colliders = Physics.OverlapSphere(potentialPosition, 0.5f);
 
             //Safe position has been found if no colliders overlapped
             safePositionFound = colliders.Length == 0;
@@ -376,11 +376,10 @@ public class FirefighterAgent : Agent
                     UpdateNearestFire();
                 }
             }
-            //Δοκιμαστικο
             else
             {
                     // Collided with fire, but not the guntip give a negative reward
-                    AddReward(-.1f);
+                    AddReward(-.05f);
             }
         }
     }

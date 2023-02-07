@@ -24,6 +24,7 @@ public class Fire : MonoBehaviour
     [HideInInspector]
     public Collider solidFireCollider;
 
+
     /// <summary>
     /// A vector pointing straight from the fire
     /// </summary>
