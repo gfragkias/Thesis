@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class UIController : MonoBehaviour
 {
+    public Image myImage;
+
     [Tooltip("The extinguished fires bar for the player")]
     public Slider playerFiresBar;
 
@@ -28,25 +30,20 @@ public class UIController : MonoBehaviour
     [Tooltip("The exit button")]
     public Button exitButton;
 
+    [Tooltip("The exit button text")]
+    public TextMeshProUGUI exitButtonText;
+
     public delegate void ButtonClick();
 
     public ButtonClick OnButtonClicked;
 
+    public delegate void ExitButtonClick();
+
+    public ExitButtonClick OnExitButtonClicked;
+
     public void ButtonClicked()
     {
-        if (OnButtonClicked != null)
-        {
-            OnButtonClicked();
-
-            if (button.gameObject.activeInHierarchy)
-            {
-                button.gameObject.SetActive(false);
-            }
-            else if (exitButton.gameObject.activeInHierarchy)
-            {
-                Application.Quit();
-            }
-        }
+        if (OnButtonClicked != null) OnButtonClicked();
     }
 
     /// <summary>
@@ -55,16 +52,8 @@ public class UIController : MonoBehaviour
     /// <param name="text">The text string on the button</param>
     public void ShowButton(string text)
     {
-        if (text == "Exit")
-        {
-            exitButton.gameObject.SetActive(true);
-            button.gameObject.SetActive(false);
-        }
-        else
-        {
-            buttonText.text = text;
-            button.gameObject.SetActive(true);
-        }
+        buttonText.text = text;
+        button.gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -73,7 +62,23 @@ public class UIController : MonoBehaviour
     public void HideButton()
     {
         button.gameObject.SetActive(false);
+    }
+
+    //The same for the exit button
+    public void ShowExitButton(string text)
+    {
+        exitButtonText.text = text;
+        exitButton.gameObject.SetActive(true);
+    }
+
+    public void HideExitButton()
+    {
         exitButton.gameObject.SetActive(false);
+    }
+
+    public void ExitButtonClicked()
+    {
+        if (OnExitButtonClicked != null) OnExitButtonClicked();
     }
 
     /// <summary>
@@ -109,18 +114,18 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// Sets the player's amount of extinguished fires
     /// </summary>
-    /// <param name="FireAmount">An amount between 0 and 1</param>
-    public void SetPlayerExtinguishes(float FireAmount)
+    /// <param name="fireAmount">An amount between 0 and 1</param>
+    public void SetPlayerExtinguishes(float fireAmount)
     {
-        playerFiresBar.value = FireAmount;
+        playerFiresBar.value = fireAmount;
     }
 
     /// <summary>
     /// Sets the opponent's amount of extinguished fires
     /// </summary>
-    /// <param name="FireAmount">An amount between 0 and 1</param>
-    public void SetOpponentExtinguishes(float FireAmount)
+    /// <param name="fireAmount">An amount between 0 and 1</param>
+    public void SetOpponentExtinguishes(float fireAmount)
     {
-        opponentFiresBar.value = FireAmount;
+        opponentFiresBar.value = fireAmount;
     }
 }

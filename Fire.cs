@@ -91,7 +91,7 @@ public class Fire : MonoBehaviour
             smokeParticle.Play();
         }
 
-        //*Return the amount of health remaining
+        //Return the amount of health remaining
         return healthExtinguished; 
     }
 

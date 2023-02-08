@@ -2,15 +2,15 @@
 using UnityEngine;
 
 /// <summary>
-/// Manages game logic and controls the UI
+/// Manages the UI and the game logic
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    [Tooltip("Game ends when an agent extinguishes this much nectar")]
+    [Tooltip("Game ends when an agent extinguishes these fires")]
     public float winningFires = 10f;
 
     [Tooltip("Game ends after this many seconds have elapsed")]
-    public float gameTimer = 70f;
+    public float gameTimer = 60f;
 
     [Tooltip("The UI Controller")]
     public UIController uiController;
@@ -39,7 +39,6 @@ public class GameManager : MonoBehaviour
         MainMenu,
         Preparing,
         Playing,
-        Paused,
         Gameover
     }
 
@@ -67,27 +66,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Exits the game
-    /// </summary>
-   //public void ExitGame()
-   //{
-   //    Application.Quit();
-   //}
-
-    //void PauseGame()
-    //{
-    //    Time.timeScale = 0;
-    //    State = GameState.Paused;
-    //    UIController.instance.ShowPauseMenu();
-    //}
-    //
-    //void UnpauseGame()
-    //{
-    //    Time.timeScale = 1;
-    //    State = GameState.Playing;
-    //    UIController.instance.HidePauseMenu();
-    //}
+    public void QuitGame()
+    {
+        Debug.Log("You quited!!");
+        Application.Quit();
+    }
 
     /// <summary>
     /// Handles a button click in different states
@@ -104,17 +87,12 @@ public class GameManager : MonoBehaviour
             // In the MainMenu state, button click should start the game
             StartCoroutine(StartGame());
         }
-        else if (State == GameState.Playing && Time.timeScale == 0)
-        {
-            // Unpause the game
-            Time.timeScale = 1;
-            uiController.HideButton();
-        }
         else
         {
             Debug.LogWarning("Button clicked in unexpected state: " + State.ToString());
         }
     }
+
 
     /// <summary>
     /// Called when the game starts
@@ -123,6 +101,8 @@ public class GameManager : MonoBehaviour
     {
         // Subscribe to button click events from the UI
         uiController.OnButtonClicked += ButtonClicked;
+
+        uiController.OnExitButtonClicked += QuitGame;
 
         // Start the main menu
         MainMenu();
@@ -145,9 +125,11 @@ public class GameManager : MonoBehaviour
         // Set the state to "main menu"
         State = GameState.MainMenu;
 
+        uiController.myImage.enabled = true;
         // Update the UI
         uiController.ShowBanner("");
         uiController.ShowButton("Start");
+        uiController.ShowExitButton("Exit");
 
         // Use the main camera, disable agent cameras
         mainCamera.gameObject.SetActive(true);
@@ -156,6 +138,7 @@ public class GameManager : MonoBehaviour
 
         // Reset all fires
         fireArea.ResetFires();
+
 
         // Reset the agents
         player.OnEpisodeBegin();
@@ -172,12 +155,15 @@ public class GameManager : MonoBehaviour
     /// <returns>IEnumerator</returns>
     private IEnumerator StartGame()
     {
+
         // Set the state to "preparing"
         State = GameState.Preparing;
 
+        uiController.myImage.enabled = false;
         // Update the UI (hide it)
         uiController.ShowBanner("");
         uiController.HideButton();
+        uiController.HideExitButton();
 
         // Use the player camera, disable the main camera
         mainCamera.gameObject.SetActive(false);
@@ -236,19 +222,6 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        //pause and unpauses the game when the esc key is pressed
-        //if (Input.GetKeyDown(KeyCode.Escape))
-        //{
-        //    if (State == GameState.Playing)
-        //    {
-        //        PauseGame();
-        //    }
-        //    else if (State == GameState.Paused)
-        //    {
-        //        UnpauseGame();
-        //    }
-        //}
-
         if (State == GameState.Playing)
         {
             // Check to see if time has run out or either agent or player extinguished first 10 fires

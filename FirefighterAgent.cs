@@ -14,7 +14,6 @@ public class FirefighterAgent : Agent
     [Tooltip("Applied force when moving")]
     public float moveForce = 2000f;
 
-    //Isws alla3w to yawspeed se turnspeed or smth..
     [Tooltip("Speed to rotate around the up axis")]
     public float yawSpeed = 100f;
 
@@ -80,13 +79,13 @@ public class FirefighterAgent : Agent
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
 
-        // Default to spawning in front of a fire
-        bool inFrontOfFire = true;
-        if (trainingMode)
-        {
-            // Spawn in front of fire 50% of the time during training
-            inFrontOfFire = UnityEngine.Random.value > .5f;
-        }
+        // Default to spawning random
+        bool inFrontOfFire = false;
+        //if (trainingMode)
+        //{
+        //    // Spawn in front of fire 50% of the time during training
+        //    inFrontOfFire = UnityEngine.Random.value > .5f;
+        //}
 
         //Move the agent to a new random position
         MoveToSafeRandomPosition(inFrontOfFire);
@@ -94,7 +93,6 @@ public class FirefighterAgent : Agent
         //Recalculate the nearest fire now that the agent has moved
         UpdateNearestFire();
     }
-
 
     /// <summary>
     /// Called when action is received from either the player input or the neural network
@@ -130,8 +128,6 @@ public class FirefighterAgent : Agent
         // Apply the new rotation
         transform.rotation = Quaternion.Euler(0f, yaw, 0f);
     }
-
-
 
     /// <summary>
     /// Collect vector observations from the environment
@@ -215,7 +211,7 @@ public class FirefighterAgent : Agent
     /// </summary>
     public void FreezeAgent()
     {
-        Debug.Assert(trainingMode == false, "Freeze/Unfreeze not supported in training");
+        //Debug.Assert(trainingMode == false, "Freeze/Unfreeze not supported in training");
         frozen = true;
         rigidbody.Sleep();
     }
@@ -225,13 +221,13 @@ public class FirefighterAgent : Agent
     /// </summary>
     public void UnfreezeAgent()
     {
-        Debug.Assert(trainingMode == false, "Freeze/Unfreeze not supported in training");
+        //Debug.Assert(trainingMode == false, "Freeze/Unfreeze not supported in training");
         frozen = false;
         rigidbody.WakeUp();
     }
 
     /// <summary>
-    ///** Move the agent to a safe random position ( i.e. does not collide with anything)
+    /// Move the agent to a safe random position to not collide with anything
     /// If in front of fire, also point the gun at the fire
     /// </summary>
     /// <param name="inFrontOfFire"> Whether to choose a spot in front of the fire</param>
@@ -250,20 +246,18 @@ public class FirefighterAgent : Agent
             {
                 //Pick a random fire
                 Fire randomFire = fireArea.Fires[UnityEngine.Random.Range(0, fireArea.Fires.Count)];
-
+                
                 // Position 0.8 to 1.3 m in front of the fire
                 float distanceFromFire = UnityEngine.Random.Range(0.8f, 1.3f);
                 potentialPosition = randomFire.transform.position + randomFire.FireUpVector * distanceFromFire;
-
-                // Point gun at the fire (agent's head is center of transform, prepei na allaxtei)
-                //Vector3 toFire = randomFire.FireCenterPosition - gunTip.position;
-                //potentialRotation = Quaternion.LookRotation(toFire, gunTip.up);
+                
+                // Point gun at the fire
                 Vector3 toFire = randomFire.FireCenterPosition - potentialPosition;
                 potentialRotation = Quaternion.LookRotation(toFire, Vector3.up);
 
             }
             else
-            {            
+            {
                 //Pick a random radius from the center of the area
                 float radius = UnityEngine.Random.Range(0f, 5f);
             
@@ -272,16 +266,32 @@ public class FirefighterAgent : Agent
             
                 //Combine radius and direction to pick a potential position 
                 potentialPosition = fireArea.transform.position + direction * Vector3.forward * radius;
-            
+
                 //Choose and set random starting yaw 
                 float yaw = UnityEngine.Random.Range(-180f, 180f);
                 potentialRotation = Quaternion.Euler(0f, yaw, 0f);
             }
             //Check to see if the agent will collide with anything
-            Collider[] colliders = Physics.OverlapSphere(potentialPosition, 0.5f);
+            Collider[] colliders = Physics.OverlapSphere(potentialPosition, 0.35f);
 
             //Safe position has been found if no colliders overlapped
             safePositionFound = colliders.Length == 0;
+
+            foreach (Collider collider in colliders)
+            {
+                // Check if the collider is attached to the Floor's game object
+                if (collider.gameObject.CompareTag("floor"))
+                {
+                    safePositionFound = true;
+                    break;
+                }
+                else
+                {
+                    // Consider other colliders as collisions
+                    safePositionFound = false;
+                    break;
+                }
+            }
         }
 
         Debug.Assert(safePositionFound, "Could not find a safe position to spawn");
@@ -290,8 +300,6 @@ public class FirefighterAgent : Agent
         transform.position = potentialPosition;
         transform.rotation = potentialRotation;
     }
-
-
 
     /// <summary>
     /// Update the nearest fire to the agent
@@ -384,9 +392,6 @@ public class FirefighterAgent : Agent
         }
     }
 
-
-
-
     /// <summary>
     /// Called when the agent collides with something solid
     /// </summary>
@@ -399,35 +404,6 @@ public class FirefighterAgent : Agent
            AddReward(-.5f);
         }
     }
-
-    /// <summary>
-    ///  #2 Called when the agent collides with something solid
-    /// </summary>
-    /// <param name="collision">The collision info</param>
-    //private void OnCollisionEnter(Collision collision)
-    //{
-    //    if (trainingMode)
-    //    {
-    //        if (collision.collider.CompareTag("boundary"))
-    //        {
-    //            // Collided with the area boundary, give a negative reward
-    //            AddReward(-.5f);
-    //        }
-    //        else if (collision.collider.CompareTag("fire"))
-    //        {
-    //            // Check if the collision was with the body, not the gunTip
-    //            foreach (ContactPoint contact in collision.contacts)
-    //            {
-    //                if (!contact.otherCollider.transform.IsChildOf(gunTip))
-    //                {
-    //                    // Collided with fire, give a negative reward
-    //                    AddReward(-.5f);
-    //                    break;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
 
     /// <summary>
     /// Called every frame
